@@ -139,7 +139,6 @@ namespace COMP1551
         public void setRole()
         {
             Console.WriteLine("1. Student\n2. Teacher\n3. Admin");//show list of role to minimize mistakes
-            Console.Write("Choose a number: ");
             int choose = InputHelper.GetIntInput("Choose a number:");
             switch (choose)
             {
@@ -163,28 +162,52 @@ namespace COMP1551
         private string[] subject = new string[3];//store 3 subjects of student
         public void setSubject()
         {
-            subject[0]=InputHelper.GetStringInput("Subject 1: ");
-            string inputSubject2;
-            while(true)
+            string subject_file = "/Users/dangquangvinh/Desktop/COMP1551/subject.csv";
+            List<string> subjects = File.ReadAllLines(subject_file).ToList();
+
+            // Create a list to store subject names (ignore header)
+            List<string> subjectNames = new List<string>();
+
+            for (int i = 1; i < subjects.Count; i++)
             {
-                inputSubject2=InputHelper.GetStringInput("Subject 2: ");
-                if (inputSubject2 != subject[0])
-                {
-                    subject[1]=inputSubject2;
-                    break;
-                }
+                string[] fields = subjects[i].Split(',');
+                string subjectName = fields[1].Trim();
+                subjectNames.Add(subjectName);
+
+                Console.WriteLine($"{i}. {subjectName}");
             }
-            string inputSubject3;
+
+            // Ask user to choose subject 1
+            int choice1 = InputHelper.GetIntInput("Choose Subject 1 (number): ");
+            subject[0] = subjectNames[choice1 - 1];
+
+            // Ask user to choose subject 2 (must be different)
+            int choice2;
             while (true)
             {
-                inputSubject3=InputHelper.GetStringInput("Subject 3: ");
-                if (inputSubject3!= subject[0] && inputSubject3!= subject[1])
+                choice2 = InputHelper.GetIntInput("Choose Subject 2 (number): ");
+                if (choice2 != choice1)
                 {
-                    subject[2]=inputSubject3;
+                    subject[1] = subjectNames[choice2 - 1];
                     break;
                 }
+                Console.WriteLine("Subject 2 must be different from Subject 1. Try again.");
+            }
+
+            // Ask user to choose subject 3 (must be different from both)
+            int choice3;
+            while (true)
+            {
+                choice3 = InputHelper.GetIntInput("Choose Subject 3 (number): ");
+                if (choice3 != choice1 && choice3 != choice2)
+                {
+                    subject[2] = subjectNames[choice3 - 1];
+                    break;
+                }
+                Console.WriteLine("Subject 3 must be different from previous choices. Try again.");
             }
         }
+
         public string getSubject()
         {
             return $"{subject[0]},{subject[1]},{subject[2]}";
@@ -196,16 +219,33 @@ namespace COMP1551
         private string[] subject = new string[3];
         public void setSubject()
         {
-            subject[0] = InputHelper.GetStringInput("Subject 1: ");
-            string inputSubject2;
+            string subject_file = "/Users/dangquangvinh/Desktop/COMP1551/subject.csv";
+            List<string> subjects = File.ReadAllLines(subject_file).ToList();
+
+            // Create a list to store subject names (ignore header)
+            List<string> subjectNames = new List<string>();
+
+            for (int i = 1; i < subjects.Count; i++)
+            {
+                string[] fields = subjects[i].Split(',');
+                string subjectName = fields[1].Trim();
+                subjectNames.Add(subjectName);
+
+                Console.WriteLine($"{i}. {subjectName}");
+            }
+
+            int choice1 = InputHelper.GetIntInput("Subject 1: ");
+            subject[0]=subjectNames[choice1-1];
+            int choice2;
             while (true)
             {
-                inputSubject2=InputHelper.GetStringInput("Subject 2: ");
-                if (inputSubject2 != subject[0])
+                choice2=InputHelper.GetIntInput("Subject 2: ");
+                if (choice2 != choice1)
                 {
-                    subject[1]=inputSubject2;
+                    subject[1]=subjectNames[choice2-1];
                     break;
                 }
+                Console.WriteLine("Subject 2 must be different from Subject 1. Try again.");
             }
             subject[2] = $"XXX"; // Only 2 subjects are asked
             //XXX means the class does not have this column
@@ -308,6 +348,9 @@ namespace COMP1551
             Console.WriteLine("3. Delete User");
             Console.WriteLine("4. List All Users");
             Console.WriteLine("5. List User by Role");
+            Console.WriteLine("6. Add Subject");
+            Console.WriteLine("7. List Students by Subject");
+            Console.WriteLine("8. List Teachers by Subject");
             Console.WriteLine("0. Exit");
             Console.WriteLine("====================================");
             Console.Write("Choose a number: ");
@@ -326,7 +369,8 @@ namespace COMP1551
             string role = user.getRole();
             if (role == "Unknown") return;
 
-            string info = "";
+            string info = "";//used to add to database
+            string info_confirm="";//used to confirm with user
 
             if (role == "Student")
             {
@@ -334,7 +378,8 @@ namespace COMP1551
                 student.setSubject();
                 // Format: baseInfo + subject[0], subject[1], subject[2], XXX, XXX, XXX
                 info = $"{user.getName()},{user.getTelephone()},{user.getEmail()},{role},{student.getSubject()},XXX,XXX,XXX\n";
-                Console.WriteLine($"3 Subjects: {student.getSubject()}");
+                string[] subjects=student.getSubject().Split(',');
+                info_confirm=$"Name: {user.getName()}\nPhone: {user.getTelephone()}\nEmail: {user.getEmail()}\nRole: {role}\nSubject 1: {subjects[0]}\nSubject 2: {subjects[1]}\nSubject 3: {subjects[2]}";
             }
             else if (role == "Teacher")
             {
@@ -343,7 +388,8 @@ namespace COMP1551
                 teacher.setSalary();
                 // Format: baseInfo + subject[0], subject[1], XXX, salary, XXX, XXX
                 info = $"{user.getName()},{user.getTelephone()},{user.getEmail()},{role},{teacher.getSubject()},XXX,{teacher.getSalary()},XXX,XXX\n";
-                Console.WriteLine($"2 Subjects: {teacher.getSubject()}\nSalary: {teacher.getSalary()}");
+                string[] subjects=teacher.getSubject().Split(',');
+                info_confirm=$"Name: {user.getName()}\nPhone: {user.getTelephone()}\nEmail: {user.getEmail()}\nRole: {role}\nSubject 1: {subjects[0]}\nSubject 2: {subjects[1]}\nSalary: {teacher.getSalary()}";
             }
             else if (role == "Admin")
             {
@@ -353,12 +399,12 @@ namespace COMP1551
                 admin.setSalary();
                 // Format: baseInfo + XXX, XXX, XXX, salary, status, workingHours
                 info = $"{user.getName()},{user.getTelephone()},{user.getEmail()},{role},XXX,XXX,XXX,{admin.getSalary()},{admin.getStatus()},{admin.getWorkingHours()}\n";
-                Console.WriteLine($"Salary: {admin.getSalary()}\nStatus: {admin.getStatus()}\nWorking Hours: {admin.getWorkingHours()}");
+                info_confirm=$"Name: {user.getName()}\nPhone: {user.getTelephone()}\nEmail: {user.getEmail()}\nRole: {role}\nStatus: {admin.getStatus}\nSalary: {admin.getSalary()}\nWorking hours: {admin.getWorkingHours()}";
             }
 
             Console.Clear();
             Console.WriteLine($"--- Data to Add ---");
-            Console.WriteLine($"Name: {user.getName()} \nPhone: {user.getTelephone()} \nEmail: {user.getEmail()} \nRole: {role}");
+            Console.WriteLine(info_confirm);
             Console.WriteLine("Hit Enter to add this user.");
             
             if (Console.ReadKey().Key == ConsoleKey.Enter) { addUser(path, info); Console.WriteLine("\nUser added successfully!"); }
@@ -559,6 +605,168 @@ namespace COMP1551
                 }
             }
         }
+        public void handleAddSubject()
+        {
+            string subject_path = "/Users/dangquangvinh/Desktop/COMP1551/subject.csv";
+
+            // Load all lines
+            List<string> lines = File.ReadAllLines(subject_path).ToList();
+
+            // Extract subjects (skip header)
+            HashSet<string> existingSubjects = new HashSet<string>();
+            for (int i = 1; i < lines.Count; i++)
+            {
+                string[] fields = lines[i].Split(',');
+                if (fields.Length >= 2)
+                {
+                    existingSubjects.Add(fields[1].Trim().ToLower());
+                }
+            }
+
+            // Ask user for a subject repeatedly until unique
+            string newSubject;
+            while (true)
+            {
+                newSubject = InputHelper.GetStringInput("Enter new subject: ").Trim().ToLower();
+
+                if (existingSubjects.Contains(newSubject))
+                {
+                    Console.WriteLine("Subject already exists. Please enter a different one.");
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // Create new ID
+            int newId = lines.Count; // since line 0 is header, line index = ID
+
+            // Append new line to CSV
+            string newLine = $"{newId},{newSubject}";
+            File.AppendAllText(subject_path, Environment.NewLine + newLine);
+
+            Console.WriteLine($"Subject '{newSubject}' added successfully!");
+        }
+        public void listStudentBySubject()
+        {
+            string subjectPath = "/Users/dangquangvinh/Desktop/COMP1551/subject.csv";
+            string userPath = "/Users/dangquangvinh/Desktop/COMP1551/database.csv";
+
+            // Load subjects
+            List<string> subjectLines = File.ReadAllLines(subjectPath).ToList();
+
+            if (subjectLines.Count <= 1)
+            {
+                Console.WriteLine("No subjects found.");
+                return;
+            }
+
+            // Display subjects (skip header)
+            Console.WriteLine("===== Choose a Subject =====");
+            for (int i = 1; i < subjectLines.Count; i++)
+            {
+                string[] parts = subjectLines[i].Split(',');
+                string subjectName = parts[1].Trim();
+                Console.WriteLine($"{i}. {subjectName}");
+            }
+
+            int choice = InputHelper.GetIntInput("Enter subject number: ");
+
+            if (choice < 1 || choice >= subjectLines.Count)
+            {
+                Console.WriteLine("Invalid choice.");
+                return;
+            }
+
+            // Get selected subject name
+            string[] chosenParts = subjectLines[choice].Split(',');
+            string chosenSubject = chosenParts[1].Trim();
+
+            Console.WriteLine($"\n===== STUDENTS TAKING {chosenSubject.ToUpper()} =====");
+
+            // Load users
+            List<string> userLines = File.ReadAllLines(userPath).ToList();
+
+            bool found = false;
+
+            for (int i = 1; i < userLines.Count; i++)
+            {
+                string[] fields = userLines[i].Split(',');
+
+                string name = fields[0];
+                string email = fields[2];
+                string role = fields[3];
+
+                // Student ?
+                if (role != "Student") continue;
+
+                string sub1 = fields[4];
+                string sub2 = fields[5];
+                string sub3 = fields[6];
+
+                // Compare subjects
+                if (sub1 == chosenSubject || sub2 == chosenSubject || sub3 == chosenSubject)
+                {
+                    Console.WriteLine($"- {name} ({email})");
+                    found = true;
+                }
+            }
+
+            if (!found)
+            {
+                Console.WriteLine("No students found for this subject.");
+            }
+        }
+        public void listTeacherBySubject()
+        {
+            string userFile = "/Users/dangquangvinh/Desktop/COMP1551/database.csv";
+            string subjectFile = "/Users/dangquangvinh/Desktop/COMP1551/subject.csv";
+
+            // Load all subjects
+            List<string> subjects = File.ReadAllLines(subjectFile).Skip(1).ToList(); // skip header
+            Console.WriteLine("===== SUBJECT LIST =====");
+            for (int i = 0; i < subjects.Count; i++)
+            {
+                string[] fields = subjects[i].Split(',');
+                Console.WriteLine($"{i + 1}. {fields[1].Trim()}");
+            }
+
+            int subjectChoice = InputHelper.GetIntInput("Choose subject number: ");
+            if (subjectChoice < 1 || subjectChoice > subjects.Count)
+            {
+                Console.WriteLine("Invalid subject selection.");
+                return;
+            }
+
+            string chosenSubject = subjects[subjectChoice - 1].Split(',')[1].Trim();
+
+            // Load all users
+            List<string> users = File.ReadAllLines(userFile).Skip(1).ToList(); // skip header
+            Console.WriteLine($"\n===== TEACHERS FOR {chosenSubject.ToUpper()} =====");
+  
+
+            bool found = false;
+            foreach (string line in users)
+            {
+                string[] fields = line.Split(',');
+                string role = fields[3].Trim();
+                if (role == "Teacher")
+                {
+                    // subjects are in columns 4,5,6
+                    if (fields.Skip(4).Take(3).Any(s => s.Trim() == chosenSubject))
+                    {
+                        Console.WriteLine($"{fields[0]} ({fields[2]})");
+                        found = true;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                Console.WriteLine("No teachers found for this subject.");
+            }
+        }
     }
 
 
@@ -592,6 +800,15 @@ namespace COMP1551
                     case "5":
                         manager.handleListByRole(path);
                         break;
+                    case "6":
+                        manager.handleAddSubject();
+                        break;
+                    case "7":
+                        manager.listStudentBySubject();
+                    break;
+                    case "8":
+                        manager.listTeacherBySubject();
+                    break;
                     case "0":
                         Console.WriteLine("Exiting program. Goodbye!");
                         return;
